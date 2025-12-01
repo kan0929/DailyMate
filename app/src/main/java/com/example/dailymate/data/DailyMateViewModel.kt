@@ -1,2 +1,108 @@
 package com.example.dailymate.data
 
+import androidx.lifecycle.LiveData
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.asFlow
+import androidx.lifecycle.viewModelScope
+import kotlinx.coroutines.flow.*
+import kotlinx.coroutines.launch
+import java.time.LocalDate
+import java.util.*
+
+class DailyMateViewModel(
+    private val userRepository: UserRepository,
+    private val routineRepository: RoutineRepository
+) : ViewModel() {
+
+
+    val getAllRoutines: LiveData<List<Routine>> = routineRepository.getAllRoutines
+
+    private val _currentUserId = MutableStateFlow<Int?>(null)
+    private val _currentUserName = MutableStateFlow("사용자")
+    val currentUserName: StateFlow<String> = _currentUserName.asStateFlow()
+
+    private val allRoutinesFlow = routineRepository.getAllRoutines.asFlow()
+
+    fun setUserId(userId: Int) {
+        _currentUserId.value = userId
+        // NOTE: DB에서 이름을 불러오는 기존 로직은 유지
+        viewModelScope.launch {
+            val user = userRepository.getUserById(userId)
+            _currentUserName.value = user?.fullName ?: "사용자"
+        }
+    }
+
+    // 🚨 수정: MainActivity에서 로그인 성공 후 이름을 즉시 설정하기 위해 추가
+    fun setCurrentUserName(name: String) {
+        _currentUserName.value = name
+    }
+
+    val todayRoutines: StateFlow<List<Routine>> = combine(
+        _currentUserId.filterNotNull(),
+        allRoutinesFlow
+    ) { userId, allRoutines ->
+        val today = LocalDate.now().dayOfWeek.getDisplayName(java.time.format.TextStyle.SHORT, Locale.KOREAN)
+        allRoutines.filter { it.userId == userId && it.days.contains(today) }
+    }.stateIn(
+        scope = viewModelScope,
+        started = SharingStarted.WhileSubscribed(5000),
+        initialValue = emptyList()
+    )
+
+    val progress: StateFlow<Float> = todayRoutines.map { routines ->
+        if (routines.isEmpty()) 0f
+        else {
+            val completedCount = routines.count { it.isCompleted }
+            completedCount.toFloat() / routines.size
+        }
+    }.stateIn(
+        scope = viewModelScope,
+        started = SharingStarted.WhileSubscribed(5000),
+        initialValue = 0f
+    )
+
+    fun signup(user: User, onSuccess: (Int) -> Unit, onError: () -> Unit) {
+        viewModelScope.launch {
+            if (userRepository.isEmailRegistered(user.email)) {
+                onError()
+            } else {
+                val newId = userRepository.signup(user).toInt()
+                onSuccess(newId)
+            }
+        }
+    }
+
+    fun signin(
+        email: String,
+        passwordHash: String,
+        onSuccess: (Int, String) -> Unit,
+        onError: () -> Unit
+    ) {
+        viewModelScope.launch {
+            val user = userRepository.getUserByEmailAndPasswordHash(email, passwordHash)
+            if (user != null) {
+                onSuccess(user.id, user.fullName)
+            } else {
+                onError()
+            }
+        }
+    }
+
+    fun deleteUser(userId: Int) = viewModelScope.launch {
+        userRepository.deleteUser(userId)
+    }
+
+    fun updateRoutineCompletion(id: Int, isCompleted: Boolean) = viewModelScope.launch {
+        routineRepository.updateRoutineCompletion(id, isCompleted)
+    }
+
+    fun toggleRoutineCompletion(routine: Routine) = viewModelScope.launch {
+        routineRepository.updateRoutineCompletion(routine.id, !routine.isCompleted)
+    }
+    fun deleteAllUsers() {
+        viewModelScope.launch {
+            userRepository.deleteAllUsers()
+        }
+    }
+
+}

@@ -1,24 +1,17 @@
 package com.example.dailymate.data
 
-import android.content.Context
-import androidx.room.Database
-import androidx.room.Room
-import androidx.room.RoomDatabase
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.ViewModelProvider
 
-@Database(entities = [User::class, Routine::class], version = 1, exportSchema = false)
-abstract class DailyMateDatabase : RoomDatabase() {
-    abstract fun dailyMateDao(): DailyMateDao
-
-    companion object {
-        @Volatile
-        private var Instance: DailyMateDatabase? = null
-
-        fun getDatabase(context: Context): DailyMateDatabase {
-            return Instance ?: synchronized(this) {
-                Room.databaseBuilder(context, DailyMateDatabase::class.java, "daily_mate_db")
-                    .build()
-                    .also { Instance = it }
-            }
+class DailyMateViewModelFactory(
+    private val userRepository: UserRepository,
+    private val routineRepository: RoutineRepository
+) : ViewModelProvider.Factory {
+    override fun <T : ViewModel> create(modelClass: Class<T>): T {
+        if (modelClass.isAssignableFrom(DailyMateViewModel::class.java)) {
+            @Suppress("UNCHECKED_CAST")
+            return DailyMateViewModel(userRepository, routineRepository) as T
         }
+        throw IllegalArgumentException("Unknown ViewModel class")
     }
 }
