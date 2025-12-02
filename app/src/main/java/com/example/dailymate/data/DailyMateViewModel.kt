@@ -4,6 +4,7 @@ import androidx.lifecycle.LiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.asFlow
 import androidx.lifecycle.viewModelScope
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import java.time.LocalDate
@@ -90,6 +91,11 @@ class DailyMateViewModel(
 
     fun deleteUser(userId: Int) = viewModelScope.launch {
         userRepository.deleteUser(userId)
+    }
+    fun addRoutine(routine: Routine) {
+        viewModelScope.launch(Dispatchers.IO) {
+            routineRepository.insertRoutine(routine)
+        }
     }
 
     fun updateRoutineCompletion(id: Int, isCompleted: Boolean) = viewModelScope.launch {

@@ -24,4 +24,11 @@ val GrayText = Color(0xFF757575)
 
 val RoutineBoxColor = Color(0xFFF1F8E9)
 
+
 val RoutineTextColor = Color(0xFF333333)
+
+val BackgroundColor = Color(0XFFE7F3DA)
+
+val RoutineBoxBackgroundColor = Color(0xFFE8F5E9)
+
+val RoutineFieldPlaceholderColor = Color(0xFF707070)

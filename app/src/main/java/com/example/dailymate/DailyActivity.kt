@@ -44,7 +44,8 @@ class DailyActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        val currentUserId = intent.getIntExtra("CURRENT_USER_ID", -1)
+        val currentUserId = intent.getIntExtra("UserId", -1)
+        val receivedFullName = intent.getStringExtra("fullName") ?: "사용자"
 
         val db = DailyMateDatabase.getDatabase(applicationContext)
         val userRepository = UserRepository(db.dailyMateDao())
@@ -67,7 +68,9 @@ class DailyActivity : ComponentActivity() {
 
                             if (nextActivityClass != null) {
                                 val intent = Intent(context, nextActivityClass).apply {
-                                    putExtra("CURRENT_USER_ID", currentUserId)
+                                    putExtra("UserId", currentUserId)
+                                    putExtra("fullName", receivedFullName)
+                                    flags = Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP
                                 }
                                 context.startActivity(intent)
                             }

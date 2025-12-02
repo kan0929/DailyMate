@@ -45,7 +45,6 @@ class MypageActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
 
         val currentUserId = intent.getIntExtra("userId", -1)
-        // 🚨 수정: Intent에서 fullName을 읽어옵니다.
         val receivedFullName = intent.getStringExtra("fullName") ?: "사용자"
 
         val db = DailyMateDatabase.getDatabase(applicationContext)
@@ -55,20 +54,44 @@ class MypageActivity : ComponentActivity() {
 
         setContent {
             DailyMateTheme {
-                MypageScreen(
-                    userId = currentUserId,
-                    // 🚨 수정: 읽어온 receivedFullName을 MypageScreen에 전달
-                    userName = receivedFullName,
-                    viewModelFactory = viewModelFactory,
-                    onLogout = {
-                        startActivity(Intent(this, SigninActivity::class.java))
-                        finish()
-                    },
-                    onAccountDeleted = {
-                        startActivity(Intent(this, SigninActivity::class.java))
-                        finish()
+                val context = LocalContext.current
+                Scaffold(
+                    bottomBar = {
+                        BottomNavigationBar(currentIndex = 4) { index ->
+                            val nextActivityClass = when (index) {
+                                0 -> MainActivity::class.java
+                                2 -> ManagementActivity::class.java
+                                3 -> DailyActivity::class.java
+                                else -> null // 탭 4 (Mypage)는 현재 Activity이므로 이동 로직 불필요
+                            }
+
+                            if (nextActivityClass != null) {
+                                // ⭐ 수정: 다른 Activity로 이동할 때 userId와 fullName을 반드시 넘겨줌
+                                val intent = Intent(context, nextActivityClass).apply {
+                                    putExtra("userId", currentUserId)
+                                    putExtra("fullName", receivedFullName)
+                                    // Activity 스택 관리를 위해 플래그 추가 (선택 사항이지만 권장)
+                                    flags = Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP
+                                }
+                                context.startActivity(intent)
+                                finish()
+                            }
+                        }
                     }
-                )
+                ) { padding ->
+                    MypageScreen(
+                        userId = currentUserId,
+                        userName = receivedFullName,
+                        viewModelFactory = viewModelFactory,
+                        onLogout = {
+                            startActivity(Intent(this, SigninActivity::class.java))
+                            finish()
+                        },
+                        onAccountDeleted = { startActivity(Intent(this, SigninActivity::class.java))
+                            finish()
+                        }
+                    )
+                }
             }
         }
     }

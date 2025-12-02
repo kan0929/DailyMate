@@ -52,7 +52,6 @@ class MainActivity : ComponentActivity() {
                     if (currentUserId != -1) {
                         viewModel.setUserId(currentUserId)
 
-                        // ⭐ [핵심 수정] receivedFullName이 기본값("사용자")일 때 DB에서 실제 이름을 로드
                         if (receivedFullName == "사용자") {
                             viewModel.loadUserName(currentUserId)
                         } else {
