@@ -14,7 +14,6 @@ class DailyMateViewModel(
     private val routineRepository: RoutineRepository
 ) : ViewModel() {
 
-
     val getAllRoutines: LiveData<List<Routine>> = routineRepository.getAllRoutines
 
     private val _currentUserId = MutableStateFlow<Int?>(null)
@@ -25,14 +24,15 @@ class DailyMateViewModel(
 
     fun setUserId(userId: Int) {
         _currentUserId.value = userId
-        // NOTE: DB에서 이름을 불러오는 기존 로직은 유지
+    }
+
+    fun loadUserName(userId: Int) {
         viewModelScope.launch {
             val user = userRepository.getUserById(userId)
             _currentUserName.value = user?.fullName ?: "사용자"
         }
     }
 
-    // 🚨 수정: MainActivity에서 로그인 성공 후 이름을 즉시 설정하기 위해 추가
     fun setCurrentUserName(name: String) {
         _currentUserName.value = name
     }
@@ -61,13 +61,13 @@ class DailyMateViewModel(
         initialValue = 0f
     )
 
-    fun signup(user: User, onSuccess: (Int) -> Unit, onError: () -> Unit) {
+    fun signup(user: User, onSuccess: (Int, String) -> Unit, onError: () -> Unit) {
         viewModelScope.launch {
             if (userRepository.isEmailRegistered(user.email)) {
                 onError()
             } else {
                 val newId = userRepository.signup(user).toInt()
-                onSuccess(newId)
+                onSuccess(newId, user.fullName)
             }
         }
     }
@@ -104,5 +104,4 @@ class DailyMateViewModel(
             userRepository.deleteAllUsers()
         }
     }
-
 }

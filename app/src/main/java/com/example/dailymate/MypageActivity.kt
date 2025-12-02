@@ -44,7 +44,9 @@ class MypageActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        val currentUserId = intent.getIntExtra("CURRENT_USER_ID", -1)
+        val currentUserId = intent.getIntExtra("userId", -1)
+        // 🚨 수정: Intent에서 fullName을 읽어옵니다.
+        val receivedFullName = intent.getStringExtra("fullName") ?: "사용자"
 
         val db = DailyMateDatabase.getDatabase(applicationContext)
         val userRepository = UserRepository(db.dailyMateDao())
@@ -55,7 +57,8 @@ class MypageActivity : ComponentActivity() {
             DailyMateTheme {
                 MypageScreen(
                     userId = currentUserId,
-                    userName = "사용자",
+                    // 🚨 수정: 읽어온 receivedFullName을 MypageScreen에 전달
+                    userName = receivedFullName,
                     viewModelFactory = viewModelFactory,
                     onLogout = {
                         startActivity(Intent(this, SigninActivity::class.java))

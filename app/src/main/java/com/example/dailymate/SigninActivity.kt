@@ -221,6 +221,7 @@ fun SigninScreen(
                         fontFamily = FontFamily(Font(R.font.spoqa_han_sans_neo)),
                         modifier = Modifier.clickable(onClick = onSignupClick)
                     )
+
                 }
             }
         }

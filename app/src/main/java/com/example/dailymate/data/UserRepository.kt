@@ -18,7 +18,7 @@ class UserRepository(private val dailyMateDao: DailyMateDao) {
         return dailyMateDao.isEmailRegistered(email)
     }
 
-    suspend fun deleteUser(userId: Int) {
+    suspend fun deleteUser(userId: Int){
         dailyMateDao.deleteUserById(userId)
     }
 

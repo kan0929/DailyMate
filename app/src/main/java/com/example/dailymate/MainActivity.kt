@@ -36,12 +36,8 @@ import java.util.*
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-
-        // 🚨 수정 1: SigninActivity에서 "userId"로 넘겨줬으므로 키를 "userId"로 수정.
         val currentUserId = intent.getIntExtra("userId", -1)
-        // 🚨 수정 2: Intent에서 "fullName"을 받아와서 사용할 준비.
         val receivedFullName = intent.getStringExtra("fullName") ?: "사용자"
-
         val db = DailyMateDatabase.getDatabase(applicationContext)
         val userRepository = UserRepository(db.dailyMateDao())
         val routineRepository = RoutineRepository(db.dailyMateDao())
@@ -50,20 +46,25 @@ class MainActivity : ComponentActivity() {
         setContent {
             DailyMateTheme {
                 val context = LocalContext.current
-
                 val viewModel: DailyMateViewModel = viewModel(factory = viewModelFactory)
 
                 LaunchedEffect(Unit) {
                     if (currentUserId != -1) {
                         viewModel.setUserId(currentUserId)
-                        // 🚨 수정 3: Intent로 받은 fullName을 ViewModel 상태에 즉시 설정.
-                        viewModel.setCurrentUserName(receivedFullName)
+
+                        // ⭐ [핵심 수정] receivedFullName이 기본값("사용자")일 때 DB에서 실제 이름을 로드
+                        if (receivedFullName == "사용자") {
+                            viewModel.loadUserName(currentUserId)
+                        } else {
+                            viewModel.setCurrentUserName(receivedFullName)
+                        }
                     }
                 }
 
                 val fullName by viewModel.currentUserName.collectAsState()
                 val todayRoutines by viewModel.todayRoutines.collectAsState(emptyList())
                 val progress by viewModel.progress.collectAsState(0f)
+
 
                 Scaffold(
                     bottomBar = {
@@ -77,7 +78,8 @@ class MainActivity : ComponentActivity() {
 
                             if (nextActivityClass != null) {
                                 val intent = Intent(context, nextActivityClass).apply {
-                                    putExtra("CURRENT_USER_ID", currentUserId)
+                                    putExtra("userId", currentUserId)
+                                    putExtra("fullName", fullName)
                                 }
                                 context.startActivity(intent)
                             }
@@ -171,7 +173,7 @@ fun HomeScreen(
                     modifier = Modifier
                         .fillMaxWidth()
                         .clickable { context.startActivity(Intent(context, AddRoutineActivity::class.java).apply {
-                            putExtra("CURRENT_USER_ID", userId)
+                            putExtra("userId", userId)
                         }) },
                     verticalAlignment = Alignment.CenterVertically
                 ) {

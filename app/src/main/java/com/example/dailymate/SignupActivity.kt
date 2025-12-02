@@ -51,7 +51,8 @@ class SignupActivity : ComponentActivity() {
                     viewModelFactory = viewModelFactory,
                     onSignupSuccess = { newUserId, fullName ->
                         val intent = Intent(this, MainActivity::class.java).apply {
-                            putExtra("CURRENT_USER_ID", newUserId)
+                            // 🚨 수정! 키 이름을 "userId"로 통일
+                            putExtra("userId", newUserId)
                             putExtra("fullName", fullName)
                         }
                         startActivity(intent)
@@ -171,8 +172,8 @@ fun SignupScreen(
                         email = email,
                         passwordHash = passwordHash
                     )
-                    viewModel.signup(newUser, onSuccess = { userId ->
-                        onSignupSuccess(userId, fullName)
+                    viewModel.signup(newUser, onSuccess = { userId, returnedFullName ->
+                        onSignupSuccess(userId, returnedFullName)
                     }, onError = {
                         errorMessage = "이미 등록된 이메일이거나 회원가입에 실패했습니다."
                     })
