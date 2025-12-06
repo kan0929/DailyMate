@@ -5,9 +5,11 @@ import androidx.room.PrimaryKey
 
 @Entity(tableName = "routines")
 data class Routine(
-    @PrimaryKey(autoGenerate = true) val routineId: Int = 0,
+    @PrimaryKey(autoGenerate = true) val id: Int = 0,
     val userId: Int,
-    val title: String,
+    val name: String,
+    val days: String,
+    val isCompleted: Boolean = false,
     val goalAmount: String,
     val routineType: String,
     val startDate: Long,

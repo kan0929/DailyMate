@@ -107,7 +107,6 @@
         val context = LocalContext.current
         val viewModel: DailyMateViewModel = viewModel(factory = (context as ManagementActivity).viewModelFactory)
 
-        // ⭐ [추가] 루틴 입력 상태 변수
         var routineTitle by remember { mutableStateOf("") }
         var goalAmount by remember { mutableStateOf("") }
         var startDate by remember { mutableStateOf(today) }
@@ -179,7 +178,7 @@
                     Row(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .background(Color(0XFFE7F3DA)), // 배경색 지정
+                            .background(Color(0XFFE7F3DA)),
                         horizontalArrangement = Arrangement.spacedBy(16.dp)
                     ) {
                         Column(modifier = Modifier.weight(1f)) {
@@ -190,7 +189,6 @@
                         }
 
                         Column(modifier = Modifier.weight(1f)) {
-                            // ⭐ [수정] RoutineEditableFieldInBox에 상태 연결
                             RoutineEditableFieldInBox(
                                 value = routineTitle,
                                 onValueChange = { routineTitle = it },
@@ -203,12 +201,12 @@
                             )
                             RoutineEditableFieldInBox(
                                 value = startDate.toString(),
-                                onValueChange = { /* 읽기 전용으로 유지 */ },
+                                onValueChange = { },
                                 placeholder = "시작 날짜"
                             )
                             RoutineEditableFieldInBox(
                                 value = endDate.toString(),
-                                onValueChange = { /* 읽기 전용으로 유지 */ },
+                                onValueChange = { },
                                 placeholder = "종료 날짜"
                             )
                         }
@@ -219,16 +217,22 @@
 
             AddButton(onClick = {
                 if (routineTitle.isNotEmpty() && goalAmount.isNotEmpty() && currentUserId != -1) {
+                    val startDayLong = startDate.toEpochDay()
+                    val endDayLong = endDate.toEpochDay()
+
                     val newRoutine = Routine(
                         userId = currentUserId,
                         name = routineTitle,
                         days = selectedRoutineType.name,
-                        isCompleted = false
+                        isCompleted = false,
+                        goalAmount = goalAmount,
+                        routineType = selectedRoutineType.name,
+                        startDate = startDayLong,
+                        endDate = endDayLong
                     )
                     viewModel.addRoutine(newRoutine)
                     Toast.makeText(context, "루틴 '${routineTitle}'이 추가되었습니다.", Toast.LENGTH_SHORT).show()
 
-                    // 저장 후 입력 필드 초기화
                     routineTitle = ""
                     goalAmount = ""
 

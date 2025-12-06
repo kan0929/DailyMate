@@ -23,7 +23,6 @@ abstract class DailyMateDatabase : RoomDatabase() {
                     DailyMateDatabase::class.java,
                     "daily_mate_database"
                 )
-                    // ⭐ [추가] 버전 불일치 시 기존 데이터를 파괴하고 새로 생성하도록 설정 (개발 단계에서 필수)
                     .fallbackToDestructiveMigration()
                     .build()
                 INSTANCE = instance
