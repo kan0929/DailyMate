@@ -21,21 +21,25 @@ interface DailyMateDao {
     @Query("DELETE FROM users WHERE id = :userId")
     suspend fun deleteUserById(userId: Int)
 
-    // [수정] routineId -> id
     @Query("SELECT * FROM routines ORDER BY id DESC")
     fun getAllRoutines(): LiveData<List<Routine>>
 
-    // [수정] routineId -> id
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertRoutine(routine: Routine): Long
 
-    // [수정] routineId -> id
     @Query("UPDATE routines SET isCompleted = :isCompleted WHERE id = :id")
     suspend fun updateRoutineCompletion(id: Int, isCompleted: Boolean)
 
     @Query("DELETE FROM users")
     suspend fun deleteAllUsers()
 
-    @Query("SELECT * FROM users WHERE email = :email AND passwordHash = :passwordHash")
+    @Delete
+    suspend fun deleteRoutine(routine: Routine)
+
+    @Query("SELECT * FROM users WHERE email = :email AND passwordHash = :passwordHash LIMIT 1")
     suspend fun getUserByEmailAndPasswordHash(email: String, passwordHash: String): User?
+
+    // 🚀 [추가] 비밀번호 업데이트 쿼리
+    @Query("UPDATE users SET passwordHash = :newPasswordHash WHERE id = :userId")
+    suspend fun updatePasswordHash(userId: Int, newPasswordHash: String): Int
 }

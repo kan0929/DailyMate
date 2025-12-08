@@ -12,8 +12,12 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.DailyMate">
         <activity
-            android:name=".AddRoutineActivity"
+            android:name=".PasswordChangeActivity"
             android:exported="false" />
+        <activity
+            android:name=".ProfileActivity"
+            android:exported="true"
+            android:theme="@style/Theme.AppCompat.Light.NoActionBar" />
         <activity
             android:name=".BottomNavigationBar"
             android:exported="false" />
@@ -25,9 +29,6 @@
             android:exported="false" />
         <activity
             android:name=".ManagementActivity"
-            android:exported="false" />
-        <activity
-            android:name=".ui.theme.AddRoutineActivity"
             android:exported="false" />
         <activity
             android:name=".MainActivity"

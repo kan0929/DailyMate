@@ -38,19 +38,53 @@ class DailyMateViewModel(
         _currentUserName.value = name
     }
 
-    val todayRoutines: StateFlow<List<Routine>> = combine(
+    val dueTodayRoutines: StateFlow<List<Routine>> = combine(
         _currentUserId.filterNotNull(),
         allRoutinesFlow
     ) { userId, allRoutines ->
         val today = LocalDate.now().dayOfWeek.getDisplayName(java.time.format.TextStyle.SHORT, Locale.KOREAN)
-        allRoutines.filter { it.userId == userId && it.days.contains(today) }
+
+        allRoutines.filter { routine ->
+            if (routine.userId != userId) return@filter false
+
+            val isFixedType = routine.days == "DAILY" || routine.days == "WEEKLY" || routine.days == "MONTHLY"
+            val isDayOfWeekRoutineDue = routine.days.contains(today)
+
+            isFixedType || isDayOfWeekRoutineDue
+        }
     }.stateIn(
         scope = viewModelScope,
         started = SharingStarted.WhileSubscribed(5000),
         initialValue = emptyList()
     )
 
-    val progress: StateFlow<Float> = todayRoutines.map { routines ->
+    val dailyRoutines: StateFlow<List<Routine>> = dueTodayRoutines.map { routines ->
+        routines.filter { it.days == "DAILY" }
+    }.stateIn(
+        scope = viewModelScope,
+        started = SharingStarted.WhileSubscribed(5000),
+        initialValue = emptyList()
+    )
+
+    val weeklyRoutines: StateFlow<List<Routine>> = dueTodayRoutines.map { routines ->
+        routines.filter { it.days == "WEEKLY" }
+    }.stateIn(
+        scope = viewModelScope,
+        started = SharingStarted.WhileSubscribed(5000),
+        initialValue = emptyList()
+    )
+
+    val monthlyRoutines: StateFlow<List<Routine>> = dueTodayRoutines.map { routines ->
+        routines.filter { it.days == "MONTHLY" }
+    }.stateIn(
+        scope = viewModelScope,
+        started = SharingStarted.WhileSubscribed(5000),
+        initialValue = emptyList()
+    )
+
+
+    // ⭐ [수정] 진행도 계산을 dailyRoutines를 기반으로 변경
+    val progress: StateFlow<Float> = dailyRoutines.map { routines ->
         if (routines.isEmpty()) 0f
         else {
             val completedCount = routines.count { it.isCompleted }
@@ -105,6 +139,14 @@ class DailyMateViewModel(
     fun toggleRoutineCompletion(routine: Routine) = viewModelScope.launch {
         routineRepository.updateRoutineCompletion(routine.id, !routine.isCompleted)
     }
+
+    // ⭐ [추가] 루틴 삭제 함수
+    fun deleteRoutine(routine: Routine) {
+        viewModelScope.launch(Dispatchers.IO) {
+            routineRepository.deleteRoutine(routine)
+        }
+    }
+
     fun deleteAllUsers() {
         viewModelScope.launch {
             userRepository.deleteAllUsers()

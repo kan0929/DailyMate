@@ -62,15 +62,13 @@ class MypageActivity : ComponentActivity() {
                                 0 -> MainActivity::class.java
                                 2 -> ManagementActivity::class.java
                                 3 -> DailyActivity::class.java
-                                else -> null // 탭 4 (Mypage)는 현재 Activity이므로 이동 로직 불필요
+                                else -> null
                             }
 
                             if (nextActivityClass != null) {
-                                // ⭐ 수정: 다른 Activity로 이동할 때 userId와 fullName을 반드시 넘겨줌
                                 val intent = Intent(context, nextActivityClass).apply {
-                                    putExtra("userId", currentUserId)
+                                    putExtra("UserId", currentUserId)
                                     putExtra("fullName", receivedFullName)
-                                    // Activity 스택 관리를 위해 플래그 추가 (선택 사항이지만 권장)
                                     flags = Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP
                                 }
                                 context.startActivity(intent)
@@ -89,6 +87,19 @@ class MypageActivity : ComponentActivity() {
                         },
                         onAccountDeleted = { startActivity(Intent(this, SigninActivity::class.java))
                             finish()
+                        },
+                        // ⭐ [수정] Scaffold에서 받은 padding을 modifier에 적용
+                        modifier = Modifier.padding(padding),
+                        // ⭐ [추가] 프로필 클릭 시 ProfileActivity로 이동하는 로직
+                        onProfileClick = {
+                            val intent = Intent(context, ProfileActivity::class.java).apply {
+                                addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                                putExtra("UserId", currentUserId)
+                                putExtra("fullName", receivedFullName)
+                            }
+
+                            // 액티비티 시작
+                            context.startActivity(intent)
                         }
                     )
                 }
@@ -104,12 +115,20 @@ fun MypageScreen(
     viewModelFactory: ViewModelProvider.Factory,
     onLogout: () -> Unit,
     onAccountDeleted: () -> Unit,
+    onProfileClick: () -> Unit, // ⭐ [추가] onProfileClick 콜백
     modifier: Modifier = Modifier
 ) {
     val context = LocalContext.current
     val viewModel: DailyMateViewModel = viewModel(factory = viewModelFactory)
     var showDeleteDialog by remember { mutableStateOf(false) }
 
+    // ⭐ [추가] 정보 팝업 관리를 위한 상태 변수
+    var showInfoDialog by remember { mutableStateOf(false) }
+    var infoDialogTitle by remember { mutableStateOf("") }
+    var infoDialogContent by remember { mutableStateOf("") }
+
+
+    // 회원 탈퇴 확인 팝업
     if (showDeleteDialog) {
         AlertDialog(
             onDismissRequest = { showDeleteDialog = false },
@@ -137,6 +156,24 @@ fun MypageScreen(
             }
         )
     }
+
+    // ⭐ [추가] 공지사항/FAQ 등의 정보 팝업
+    if (showInfoDialog) {
+        AlertDialog(
+            onDismissRequest = { showInfoDialog = false },
+            title = { Text(infoDialogTitle, fontWeight = FontWeight.Bold) },
+            text = { Text(infoDialogContent) },
+            confirmButton = {
+                Button(
+                    onClick = { showInfoDialog = false },
+                    colors = ButtonDefaults.buttonColors(containerColor = PrimaryGreen)
+                ) {
+                    Text("확인")
+                }
+            }
+        )
+    }
+
 
     Column(
         modifier = modifier
@@ -166,7 +203,7 @@ fun MypageScreen(
                 .padding(horizontal = 24.dp)
                 .background(Color(0xFFE8F5E9), shape = RoundedCornerShape(12.dp))
                 .height(100.dp)
-                .clickable { }
+                .clickable(onClick = onProfileClick) // ⭐ [수정] 프로필 클릭 이벤트 연결
         ) {
             Row(
                 modifier = Modifier
@@ -220,10 +257,26 @@ fun MypageScreen(
                 .background(Color.White, shape = RoundedCornerShape(12.dp))
                 .padding(vertical = 8.dp)
         ) {
-            MypageMenuItem(label = "공지사항", onClick = {})
-            MypageMenuItem(label = "FAQ", onClick = {})
-            MypageMenuItem(label = "이용약관 및 개인정보 처리방침", onClick = {})
-            MypageMenuItem(label = "앱 설정", onClick = {})
+            MypageMenuItem(label = "공지사항", onClick = {
+                infoDialogTitle = "공지사항"
+                infoDialogContent = "현재 DailyMate는 안정화 단계에 있습니다. 새로운 기능은 추후 업데이트 예정입니다."
+                showInfoDialog = true
+            })
+            MypageMenuItem(label = "FAQ", onClick = {
+                infoDialogTitle = "FAQ"
+                infoDialogContent = "Q. 살 빼고 싶어요 A. 술을 그만 머거"
+                showInfoDialog = true
+            })
+            MypageMenuItem(label = "이용약관 및 개인정보 처리방침", onClick = {
+                infoDialogTitle = "이용약관 및 개인정보 처리방침"
+                infoDialogContent = "이용약관이 머에요?? 지수님 배고파요 술 사조우우우우"
+                showInfoDialog = true
+            })
+            MypageMenuItem(label = "앱 설정", onClick = {
+                infoDialogTitle = "앱 설정"
+                infoDialogContent = "현재 앱 설정 기능은 준비 중입니다. 기본 테마를 사용합니다."
+                showInfoDialog = true
+            })
         }
 
         Spacer(modifier = Modifier.height(16.dp))

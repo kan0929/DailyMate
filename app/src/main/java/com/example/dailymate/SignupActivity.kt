@@ -51,8 +51,7 @@ class SignupActivity : ComponentActivity() {
                     viewModelFactory = viewModelFactory,
                     onSignupSuccess = { newUserId, fullName ->
                         val intent = Intent(this, MainActivity::class.java).apply {
-                            // 🚨 수정! 키 이름을 "userId"로 통일
-                            putExtra("userId", newUserId)
+                            putExtra("UserId", newUserId)
                             putExtra("fullName", fullName)
                         }
                         startActivity(intent)

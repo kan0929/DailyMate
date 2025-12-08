@@ -54,7 +54,8 @@ class SigninActivity : ComponentActivity() {
                     viewModel = viewModel,
                     onLoginSuccess = { userId, fullName ->
                         val intent = Intent(this@SigninActivity, MainActivity::class.java).apply {
-                            putExtra("userId", userId)
+                            // ⭐ 수정: "userId" -> "UserId" (대문자 D로 통일)
+                            putExtra("UserId", userId)
                             putExtra("fullName", fullName)
                         }
                         startActivity(intent)
