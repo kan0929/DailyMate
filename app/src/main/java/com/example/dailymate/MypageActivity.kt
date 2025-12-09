@@ -44,7 +44,7 @@ class MypageActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        val currentUserId = intent.getIntExtra("userId", -1)
+        val currentUserId = intent.getIntExtra("userId",  intent.getIntExtra("UserId", -1))
         val receivedFullName = intent.getStringExtra("fullName") ?: "사용자"
 
         val db = DailyMateDatabase.getDatabase(applicationContext)
@@ -59,6 +59,7 @@ class MypageActivity : ComponentActivity() {
                     bottomBar = {
                         BottomNavigationBar(currentIndex = 4) { index ->
                             val nextActivityClass = when (index) {
+                                1 -> CalendarActivity::class.java
                                 0 -> MainActivity::class.java
                                 2 -> ManagementActivity::class.java
                                 3 -> DailyActivity::class.java
@@ -67,6 +68,7 @@ class MypageActivity : ComponentActivity() {
 
                             if (nextActivityClass != null) {
                                 val intent = Intent(context, nextActivityClass).apply {
+                                    putExtra("userId", currentUserId)
                                     putExtra("UserId", currentUserId)
                                     putExtra("fullName", receivedFullName)
                                     flags = Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP

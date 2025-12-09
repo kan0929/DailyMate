@@ -60,7 +60,7 @@ import java.util.*
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        val currentUserId = intent.getIntExtra("UserId", -1)
+        val currentUserId = intent.getIntExtra("userId", intent.getIntExtra("UserId", -1))
         val receivedFullName = intent.getStringExtra("fullName") ?: "사용자"
         val db = DailyMateDatabase.getDatabase(applicationContext)
         val userRepository = UserRepository(db.dailyMateDao())
@@ -104,6 +104,7 @@ class MainActivity : ComponentActivity() {
                     bottomBar = {
                         BottomNavigationBar(currentIndex = 0) { index: Int ->
                             val nextActivityClass = when (index) {
+                                1 -> CalendarActivity::class.java
                                 2 -> ManagementActivity::class.java
                                 3 -> DailyActivity::class.java
                                 4 -> MypageActivity::class.java
@@ -113,6 +114,7 @@ class MainActivity : ComponentActivity() {
                             if (nextActivityClass != null) {
                                 val intent = Intent(context, nextActivityClass).apply {
                                     // MypageActivity는 Prefs를 사용하지만, 다른 Activity와의 호환성을 위해 Intent로도 데이터를 전달
+                                    putExtra("userId", currentUserId)
                                     putExtra("UserId", currentUserId)
                                     putExtra("fullName", fullName)
                                     putExtra("UserEmail", currentEmail)
